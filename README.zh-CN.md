@@ -15,6 +15,15 @@
 
 ---
 
+## 环境要求
+
+- **Node.js ≥ 22.5**。本包使用内置模块 `node:sqlite`。更低版本运行 `purge-community` / `dsh-purge` 时，入口会先向 stderr 打印 `requires Node >=22.5 (node:sqlite)` 并退出，而不是在中途抛出 `ERR_UNKNOWN_BUILTIN_MODULE`。
+- `purge-community runtime` 报告当前 Node、`node:sqlite` 是否加载、FTS5，以及在线 `backup()`（22.16 起）是否可用。
+- `purge-community sqlite-snapshot <源.db> <目标.db>` 为正在写入的库做一致性热备：优先 `node:sqlite` 的 `backup()`，22.5–22.15 回退到 `VACUUM INTO`。不要直接拷贝还带着 `-wal` 的库文件。
+- Desktop 安装仍使用应用自带运行时；该运行时同样需要 ≥ 22.5。不要求单独安装全局 pnpm。
+
+---
+
 ## 1.6.33：Linux 安装入口与跨平台安装保护
 
 合入 [PR #42](https://github.com/kingcharleslzy-ai/dsh-purge/pull/42)，增加 Linux CLI/Web 安装支持。系统目录不可写时准备用户宿主副本，迁移成功后才切换入口；卸载符号链接时保留外部源码与共享依赖。Windows/macOS 继续通过完整安装、打包及真实 Electron 回归。不改现有补丁功能、提示词或用户设置，不自动重启。[发行说明](docs/releases/1.6.33.md) · [验证范围](docs/maintenance-pr-42.md)
@@ -61,7 +70,7 @@ curl -fsSL https://raw.githubusercontent.com/kingcharleslzy-ai/dsh-purge/master/
 
 ### Linux · CLI / Web
 
-贡献者在 CachyOS Linux x86_64 提供了实机验证（DSH 0.2.1-rc.2、Node 26.11.1）；维护方另在 Ubuntu CI 验证真实官方 npm 宿主的安装、备份、回滚及失败恢复。Linux 全部图形界面与模型任务尚未全面验收。沿用原有 JavaScript、面板和插件功能；安装引导要求 Node ≥18，演练台还需宿主运行时支持 `node:sqlite`。
+贡献者在 CachyOS Linux x86_64 提供了实机验证（DSH 0.2.1-rc.2、Node 26.11.1）；维护方另在 Ubuntu CI 验证真实官方 npm 宿主的安装、备份、回滚及失败恢复。Linux 全部图形界面与模型任务尚未全面验收。沿用原有 JavaScript、面板和插件功能；安装引导与 CLI 要求 Node.js ≥ 22.5（`node:sqlite`）。
 
 先安装并启动一次 DSH，初始化 `web` profile，再下载并运行安装脚本：
 

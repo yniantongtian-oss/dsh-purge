@@ -55,6 +55,8 @@ selfcheck 全绿 = 可以开工
 | `purge-community diagnose [--json]` | 锚点漂移诊断（含行号 + 片段） | 0 |
 | `purge-community reanchor list\|show\|apply <id> [--index n] [--lines a-b] [--yes]\|clear <id>` | 半自动重锚：把新锚点钉成本地覆盖 | 0 |
 | `purge-community probe [new]` | 生成/查看运行时探针 | 0 |
+| `purge-community runtime` | 当前 Node、`node:sqlite`、FTS5、在线 `backup()` | sqlite 不可用 → 1，否则 0 |
+| `purge-community sqlite-snapshot <src> <dest>` | 对正在使用的 SQLite 做一致性热备（优先 `backup()`，否则 `VACUUM INTO`） | 0 |
 | `purge-community audit [--limit n]` | 最近动作记录（apply/revert/boost/probe/preset/reanchor） | 0 |
 | `purge-community boost [on\|off]` | 尾部强化段开关 | 0 |
 | `purge-community preset [status\|install [--force]]` | `unrestricted` 预设落盘 | 0 |
@@ -134,7 +136,7 @@ purge-community probe new
 | 插件 | `dsh-purge-community` 1.6.33 |
 | 已验证宿主 | DSH Desktop 0.2.1-rc.1 / 0.2.1-rc.2 |
 | 其它宿主 | 允许应用，但 `selfcheck` 会标"未验证"；先看 `diagnose` |
-| Node | ≥18（桌面版自带运行时即可） |
+| Node | ≥22.5（代码使用 `node:sqlite`；更低版本 CLI 打印 `requires Node >=22.5 (node:sqlite)`） |
 
 ## 10. 这份文档的维护规则
 

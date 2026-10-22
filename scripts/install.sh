@@ -7,7 +7,7 @@ for arg do
       cat <<'HELP'
 Usage: sh scripts/install.sh [--dry-run] [--version=X.Y.Z] [--profile=NAME]
        sh scripts/install.sh --archive=/path/package.tgz --sha256=HEX [--version=X.Y.Z]
-Linux: existing DSH CLI/Web, Node >=18, default profile web.
+Linux: existing DSH CLI/Web, Node >=22.5 (node:sqlite), default profile web.
   PURGE_DSH_CLI selects a CLI (default: dsh on PATH); DSH_NODE selects Node.
 Desktop: DSH_APP selects the executable on Linux or the .app on macOS.
   Uses the selected Desktop's Electron runtime; default profile desktop.

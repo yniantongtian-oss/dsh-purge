@@ -33,6 +33,16 @@ async function get(url, limit, request) {
   throw Error("Too many release redirects");
 }
 
+/** Same floor as lib/node-runtime.js. Inlined so a lone downloaded bootstrap still runs. */
+export function nodeSupportsSqlite(version = process.versions.node) {
+  const match = /^v?(\d+)(?:\.(\d+))?(?:\.(\d+))?/.exec(String(version ?? "").trim());
+  if (!match) return false;
+  const major = Number(match[1]);
+  const minor = Number(match[2] || 0);
+  const patch = Number(match[3] || 0);
+  return major > 22 || (major === 22 && (minor > 5 || (minor === 5 && patch >= 0)));
+}
+
 export function verifyChecksum(bytes, text, filename) {
   const lines = text.trim().split(/\r?\n/).map(line => /^([a-f0-9]{64})\s+\*?([^\s]+)$/i.exec(line));
   const matches = lines.filter(row => row && row[2] === filename);
@@ -87,7 +97,10 @@ export function prepareLinuxHost(cli, { userHome = os.homedir(), log = console.l
   const aiBase = path.join(root, "node_modules/@deepseek-ai");
   try { fs.accessSync(root, fs.constants.W_OK); fs.accessSync(aiBase, fs.constants.W_OK); return { cli, copied: false }; } catch {}
   const inside = (base, file) => file === base || (!path.relative(base, file).startsWith(".." + path.sep) && path.relative(base, file) !== ".." && !path.isAbsolute(path.relative(base, file)));
-  const identity = createHash("sha256").update(root).update(JSON.stringify(meta)).update(String(fs.statSync(path.join(root, "package.json")).mtimeMs)).update(fs.readFileSync(cli)).digest("hex");
+  const manifestBytes = fs.readFileSync(path.join(root, "package.json"));
+  // Hash the raw manifest, not JSON.stringify(parsed). A trailing space is how
+  // callers bust the cache, and mtimeMs can stay identical within one tick.
+  const identity = createHash("sha256").update(root).update(manifestBytes).update(fs.readFileSync(cli)).digest("hex");
   const hostsDir = path.join(userHome, ".local/share/dsh-purge/hosts");
   const destination = path.join(hostsDir, identity.slice(0, 20));
   const target = path.join(destination, "dsh");
@@ -160,7 +173,7 @@ export async function bootstrapInstall(options = {}) {
     mode = process.env.PURGE_INSTALL_MODE || "desktop",
     home = process.env.DSH_HOME || path.join(os.homedir(), ".dsh"), profile = process.env.DSH_PROFILE || (mode === "web" ? "web" : "desktop"), dryRun = false } = options;
   if (!["web", "desktop"].includes(mode)) throw Error("Invalid installation mode");
-  if (Number(process.versions.node.split(".")[0]) < 18) throw Error("Node >=18 is required");
+  if (!nodeSupportsSqlite()) throw Error("requires Node >=22.5 (node:sqlite)");
   if (!/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(profile)) throw Error("Invalid profile name");
   if (!fs.existsSync(path.join(home, "profiles", profile, "package.json"))) throw Error("Profile is not initialized; open DSH once first, or specify the correct home/profile.");
   let cli = options.cli || (mode === "web" ? webCli() : desktopCli(executable, platform));

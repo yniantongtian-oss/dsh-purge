@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import "./runtime-guard.mjs";
 import path from "node:path";
 import fs from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -12,6 +13,7 @@ import { installPreset, presetStatus } from "../lib/presets.js";
 import { readBoost, writeBoost } from "../lib/boost.js";
 import { readTuning, writeTuning } from "../lib/tuning.js";
 import { createProbe, readProbe } from "../lib/probe.js";
+import { describeRuntime } from "../lib/node-runtime.js";
 const rawArgs = process.argv.slice(2);
 // 原版 CLI 的全部动作（apply/revert/uninstall/edit/status）原样保留，
 // purge-community 只做转发，避免两套实现漂移。
@@ -132,6 +134,13 @@ if (LEGACY[op]) {
       const probe = readProbe();
       result = { ok: true, active: !!probe, nonce: probe?.nonce || "", hint: "purge-community probe new" };
     }
+  } else if (op === "runtime") {
+    result = describeRuntime();
+    if (!result.ok) process.exitCode = 1;
+  } else if (op === "sqlite-snapshot") {
+    if (!argument || !argument2) throw Error("用法：purge-community sqlite-snapshot <source.db> <dest.db>");
+    const { snapshotSqlite } = await import("../lib/sqlite-snapshot.js");
+    result = await snapshotSqlite(argument, argument2);
   } else if (op === "preset") {
     const sub = argument || "status";
     if (sub === "install" || sub === "update") {
@@ -215,7 +224,7 @@ if (LEGACY[op]) {
     });
   } else
     throw Error(
-      "用法：purge-community status | host-status | diagnose | selfcheck [--json] | boost on|off | rewind on|off | probe [new] | audit [--limit n] | preset [status|install] | backup [prune|usage] | rollback <备份ID> | migrate <tgz> | apply | revert | uninstall | edit",
+      "用法：purge-community status | host-status | diagnose | selfcheck [--json] | runtime | sqlite-snapshot <src> <dest> | boost on|off | rewind on|off | probe [new] | audit [--limit n] | preset [status|install] | backup [prune|usage] | rollback <备份ID> | migrate <tgz> | apply | revert | uninstall | edit",
     );
   console.log(JSON.stringify(result, null, 2));
 } catch (e) {

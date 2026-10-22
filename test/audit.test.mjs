@@ -32,3 +32,30 @@ test("audit appends, rotates and reads newest first", () => {
     fs.rmSync(home, { recursive: true, force: true });
   }
 });
+
+test("audit keeps the rotated generation visible and rotates more than once", () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), "purge-audit-keep-"));
+  try {
+    assert.equal(logAudit("apply", { applied: 1 }, home), true);
+    assert.equal(logAudit("probe", { nonce: "purge-aaaaaaaa" }, home), true);
+    const file = path.join(home, "dsh-purge-community", "audit.jsonl");
+    const first = fs.readFileSync(file, "utf8");
+    fs.writeFileSync(file, first + "x".repeat(AUDIT_MAX_BYTES));
+    assert.equal(logAudit("revert", { reverted: 1 }, home), true);
+    const rows = readAudit({ home, limit: 10 });
+    assert.equal(rows[0].event, "revert");
+    assert.ok(rows.some((row) => row.event === "probe" && row.nonce === "purge-aaaaaaaa"));
+    assert.ok(rows.some((row) => row.event === "apply"));
+
+    fs.writeFileSync(file, "y".repeat(AUDIT_MAX_BYTES + 10));
+    assert.equal(logAudit("boost", { enabled: false }, home), true);
+    fs.writeFileSync(file, "z".repeat(AUDIT_MAX_BYTES + 10));
+    assert.equal(logAudit("preset", { action: "install" }, home), true);
+    assert.equal(fs.existsSync(file + ".1"), true);
+    assert.equal(fs.existsSync(file + ".2"), true);
+    assert.equal(fs.existsSync(file + ".3"), false);
+    assert.equal(readAudit({ home })[0].event, "preset");
+  } finally {
+    fs.rmSync(home, { recursive: true, force: true });
+  }
+});
