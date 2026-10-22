@@ -7,7 +7,7 @@
 - 确认用户授权，读取实际 DSH 版本和应用路径，先打开一次完成 profile 初始化。
 - 默认数据目录 `~/.dsh`、profile `desktop`。不同目录/profile 必须显式指定，不能自动选另一个实例。
 - 保留正在运行的任务；安装不会停止进程或自动重启。用户在任务结束后手动重开。
-- 不需要管理员权限或全局 Node/pnpm；Desktop 入口使用该应用的 Electron 运行时和 CLI。遇到权限问题先核对路径，不建议盲目提权。
+- 不需要管理员权限或全局 pnpm。CLI、测试和引导脚本需要 **Node.js ≥ 22.5**（内置 `node:sqlite`）。版本不够时入口打印 `requires Node >=22.5 (node:sqlite)` 并退出。Desktop 入口使用该应用的 Electron 运行时和 CLI，该运行时也要满足同一版本。遇到权限问题先核对路径，不建议盲目提权。
 
 ## 命令
 

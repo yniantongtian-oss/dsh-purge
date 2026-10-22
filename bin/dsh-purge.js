@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-
+import "./runtime-guard.mjs";
 import * as core from "../lib/core.js";
 import * as rules from "../lib/rules.js";
 

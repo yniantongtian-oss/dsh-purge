@@ -15,6 +15,10 @@ DSH is not short of capability; it is gated four times. Purge removes those gate
 
 83 host patches, all re-qualified against a pristine **0.2.1-rc.2** copy (64 written, 6 already at target, 0 failed). The panel lives in the **left rail** as a full page styled with DSH's own tokens; explanations sit in small `?` tips. `purge-community selfcheck` proves each of the 25 layers is live, and `diagnose` points at the exact file and line when a host update moves an anchor.
 
+## Prerequisites
+
+Node.js **≥ 22.5**. The package uses the built-in `node:sqlite` module. `purge-community` and `dsh-purge` check this before loading anything else and print `requires Node >=22.5 (node:sqlite)` when the runtime is older. `purge-community runtime` reports Node, `node:sqlite`, FTS5, and whether the online `backup()` API (Node 22.16+) is present. `purge-community sqlite-snapshot <source.db> <dest.db>` copies a live database consistently via that API, or `VACUUM INTO` on Node 22.5–22.15. Desktop installs use the application's own runtime, which must meet the same floor.
+
 ## Install
 
 ```sh
