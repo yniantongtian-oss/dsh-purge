@@ -97,7 +97,10 @@ export function prepareLinuxHost(cli, { userHome = os.homedir(), log = console.l
   const aiBase = path.join(root, "node_modules/@deepseek-ai");
   try { fs.accessSync(root, fs.constants.W_OK); fs.accessSync(aiBase, fs.constants.W_OK); return { cli, copied: false }; } catch {}
   const inside = (base, file) => file === base || (!path.relative(base, file).startsWith(".." + path.sep) && path.relative(base, file) !== ".." && !path.isAbsolute(path.relative(base, file)));
-  const identity = createHash("sha256").update(root).update(JSON.stringify(meta)).update(String(fs.statSync(path.join(root, "package.json")).mtimeMs)).update(fs.readFileSync(cli)).digest("hex");
+  const manifestBytes = fs.readFileSync(path.join(root, "package.json"));
+  // Hash the raw manifest, not JSON.stringify(parsed). A trailing space is how
+  // callers bust the cache, and mtimeMs can stay identical within one tick.
+  const identity = createHash("sha256").update(root).update(manifestBytes).update(fs.readFileSync(cli)).digest("hex");
   const hostsDir = path.join(userHome, ".local/share/dsh-purge/hosts");
   const destination = path.join(hostsDir, identity.slice(0, 20));
   const target = path.join(destination, "dsh");
