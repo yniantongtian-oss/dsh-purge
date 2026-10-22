@@ -20,7 +20,10 @@ test('real CONNECT tunnel validates TLS, scopes credentials and respects total t
       const result=await exec(process.execPath,['--test',fileURLToPath(import.meta.url)],{
         timeout:30000,maxBuffer:1024*1024,env,
       }).catch(e=>{throw Error(e.message+'\n'+e.stdout+'\n'+e.stderr);});
-      assert.match(result.stdout,/# fail 0/);
+      // Node 22 prints TAP (`# fail 0`). Node 24's spec reporter prints `ℹ fail 0`.
+      const summary=`${result.stdout}\n${result.stderr}`;
+      assert.match(summary,/(?:#|\u2139) fail 0/);
+      assert.match(summary,/(?:#|\u2139) pass [1-9]/);
     } finally {if(!process.env.PURGE_TEST_TLS_DIR)fs.rmSync(tmp,{recursive:true,force:true});}
     return;
   }
